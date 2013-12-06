@@ -4,6 +4,7 @@
 import collections
 import optparse
 import os
+import re
 import sys
 
 import rarfile
@@ -21,7 +22,7 @@ _OPT.add_option("-a", action = "store", dest = "above",
     help = "lines count above satisfied line")
 _OPT.add_option("-b", action = "store", dest = "below",
     help = "lines count below satisfied line")
-_OPT.add_option("-e", action = "store", dest = "regex",
+_OPT.add_option("-e", action = "store_true", dest = "regex",
     help = "using regex")
 _OPT.add_option("-n", action = "store_true", dest = "linenu",
     help = "show the line number")
@@ -61,6 +62,12 @@ class GrepInfo(object):
     self._flush_below()
     self._print(line)
     self._last_match_line = self._nr
+
+  def _is_matched(self, line):
+    if self._regex:
+      return re.search(self._pattern, line)
+
+    return self._pattern in line
 
   def _print(self, line):
     '''
@@ -114,7 +121,7 @@ class GrepInfo(object):
     while line:
       self._nr += 1
 
-      if self._pattern in line:
+      if self._is_matched(line):
         self._matching(line)
       else:
         self._record_above(line)
@@ -127,9 +134,12 @@ def _parse_opts():
   opts, _ = _OPT.parse_args()
   return GrepInfo(opts)
 
-if __name__ == '__main__':
+def main():
   grep = _parse_opts()
   if not grep._filepath or not grep._pattern:
     print opts
     exit(0)
   grep._grep()
+
+if __name__ == '__main__':
+  main()
