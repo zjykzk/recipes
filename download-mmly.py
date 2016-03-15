@@ -13,7 +13,9 @@ import re
 import requests
 
 _album_urls = [
-  'http://www.ximalaya.com/7545862/album/292700'
+  'http://www.ximalaya.com/20706780/album/342945',
+  'http://www.ximalaya.com/20706780/album/342945?page=2',
+  'http://www.ximalaya.com/20706780/album/342945?page=3'
 ]
 
 def _extra_sounds(album_url_):
@@ -35,15 +37,16 @@ def _download(sounds):
     print(r.url)
 	
   for name, url in filter(lambda s: not os.path.exists(_filename(*s)), sounds):
-    with open(name + url[url.rfind('.'):], mode='bw') as o:
-      print('download ' + url + ', save as ' + o.name)
-      try:
+    try:
+      with open(name + url[url.rfind('.'):], mode='bw') as o:
+        print('download ' + url + ', save as ' + o.name)
         resp = requests.get(url, timeout=20, hooks=dict(response=print_url))
-      except Exception as e:
-        print(e)
-      else:
         print('file size %s' % resp.headers['Content-Length'])
         o.write(requests.get(url).content)
+    except Exception as e:
+      print(e)
+      os.remove(_filename(name, url))
+    else:
       print('download ' + o.name + ' finished')
 
 def main():
